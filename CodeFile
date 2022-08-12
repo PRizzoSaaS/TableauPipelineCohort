@@ -23,3 +23,16 @@
 
 [Opportunity Calculation] = IFNULL(IIF([Closed Percent of Total] = 0, NULL, [Closed Percent of Total]), RUNNING_AVG([Closed Percent of Total]))
                                     
+**^ The expression will convert 0% (Periods that have no opportunities closed) to NULL, the IFNULL function then will convert the NULL values to 
+the running average of the table - this will help us forecast how many opportunities created in the cohort will close in x months**
+
+
+**Current filters in Tableau Workbook
+
+Won = "True"
+Opportunity Type = "New Business - New Logo" & "New Subscription"
+Company Name = "Appspace" & "Appspace Inc."
+
+
+I am noticing that most of the opportunities are created and closed in the same month - need to discuss filtering out "quick deals" 
+(credit card monthly deals, small dollar deals?) to determine accurate close cycle** 
