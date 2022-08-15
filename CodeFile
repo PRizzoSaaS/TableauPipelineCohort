@@ -19,13 +19,45 @@
 **Calculate the percent of opportunities closed for a given period by the total closed in the respectivie Cohort**
 [Closed Percent of Total] = [Opportunities Closed] / [Total Closed in Cohort]
 
-**Calculate main expression - this will show the percentage of opportunities closed of the total in the respective period for all cohort groups**
+**CALCULATE MAIN FIELDS ** 
+**This will show the percentage of opportunities closed of the total in the respective period for all cohort groups**
 
-[Opportunity Calculation] = IFNULL(IIF([Closed Percent of Total] = 0, NULL, [Closed Percent of Total]), RUNNING_AVG([Closed Percent of Total]))
+[Opportunity Calculation %] =
+
+IFNULL(
+
+        IF[Closed Percent of Total] = 0 
+
+            THEN NULL
+
+            ELSE [Closed Percent of Total]
+
+        END,
+
+        RUNNING_AVG([Closed Percent of Total]))
                                     
 **^ The expression will convert 0% (Periods that have no opportunities closed) to NULL, the IFNULL function then will convert the NULL values to 
 the running average of the table - this will help us forecast how many opportunities created in the cohort will close in x months**
 
+**This will show the count of closed opportunities in the respective period, if none are closed in x period in the cohort, NUll is replaced with 0**
+
+[Opportunity Calculation Count] = 
+
+IF [Opportunities Closed] <> 0 
+
+    THEN [Opportunities Closed]
+
+    ELSE 
+    
+        IF RUNNING_SUM(COUNTD([Opportunity ID]))<[Total Closed in Cohort]
+
+            THEN 0
+                    
+            ELSE NULL
+                    
+        END
+
+END
 
 **Current filters in Tableau Workbook
 
