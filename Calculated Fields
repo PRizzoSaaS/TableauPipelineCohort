@@ -1,0 +1,76 @@
+								SALESFORCE PIPELINE OPPORTUNITY COHORT ANALYSIS
+
+1. FIND EARLIEST CREATED DATE FOR EACH OPPORTUNITY
+	This calculated field will be our vertical axis & Cohort groups
+	Convert to Month & Discrete
+	
+	[First Opportunity Created Date] = DATE( {FIXED [Opportunity ID] : MIN([Created Date])})
+
+2. Calculate the total opportunities that were created in the respective Cohort
+	This calculated field creates a fixed amount and is not effected by the Table
+	Will be used to calculate % of opportunities closed in x Month
+
+	[Total Closed in Cohort] = TOTAL(COUNTD([Opportunity ID]))
+
+3. Calculate the months between [First Opportunity Created Date] and the [Close Date] for a given [Opportunity ID]
+	This expression will be our horizaontal axis, showing us how many opportunities are closed after x Months from the [First Opportunity Created Date]
+	Convert to Dimension & Discrete
+
+	[Period] = DATEDIFF ('month', [First Opportunity Created Date], ([Close Date]))
+
+4. Count the Distinct Opportunities that are closed in the respective period. This is different than the Total calculated field in Step 3 because it is not fixed. 
+	We want this field changing with the [Period] column
+	
+	[Opportunities Closed] = COUNTD ([Opportunity ID])
+
+5. Calculate the percent of opportunities closed for a given [Period] by the [Total Closed in Cohort]
+	
+	[Closed Percent of Total] = [Opportunities Closed] / [Total Closed in Cohort]
+
+							MAIN CALCULATED FIELDS FOR OPP COHORT CLOSED: COUNT
+
+6. Calculate % of Opps Closed in the respective period
+	If no opportunities are closed in a given period, and the running sum of previous periods does not equal the total closed in the given cohort, make 0%
+	If no opportunities are closed in a given period, and the running sum of previous periods equals the total closed in the given cohort, make NULL
+
+[Opportunity Calculation Count] = IF [Opportunities Closed] <> 0 
+
+    					THEN [Opportunities Closed]
+    					ELSE 
+    
+						IF RUNNING_SUM(COUNTD([Opportunity ID]))<[Total Closed in Cohort]
+
+            						THEN 0
+            						ELSE NULL
+        					END
+				  END
+				  
+							MAIN CALCULATED FIELDS FOR OPP COHORT CLOSED: %
+				  
+
+7. Show the [Closed Percent of Total] if it is greater than zero
+	If no opportunities are closed in a given period, and the running sum of previous periods does not equal the total closed in the given cohort, make 0%
+	If no opportunities are closed in a given period, and the running sum of previous periods equals the total closed in the given cohort, make NULL
+
+[Opportunity Calculation %] = IF [Opportunities Closed] > 0
+
+    				THEN [Closed Percent of Total]
+				ELSE
+
+					IF RUNNING_SUM([Opportunities Closed]) < [Total Closed in Cohort]
+
+            					THEN 0
+            					ELSE NULL
+					END
+			      END
+
+8. Calculate the Average % of opportunities closed in a given period
+	This needs to be its own Mark, as we need to compute this DOWN, while [Opportunity Calculation Count] is computed ACROSS
+
+[Opportunity Calcualation AVG] = IF ISNULL([Opportunity Calculation %])
+
+    					THEN WINDOW_SUM([Opportunity Calculation Count],FIRST(),0) / WINDOW_SUM([Total Closed in Cohort],FIRST(),0)
+					ELSE NULL
+
+				 END
+
